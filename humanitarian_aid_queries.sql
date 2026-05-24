@@ -1,12 +1,9 @@
 -- ============================================================
 -- HUMANITARIAN AID ELIGIBILITY & DISTRIBUTION ANALYSIS
 -- Simulated Dataset — For Portfolio Demonstration Only
--- Author: [Your Name]
--- Date: 2024
+-- Author: Hala Dib
+-- Date: 2026
 -- Note: All data is synthetic. Reflects UN-style data workflows.
--- ============================================================
-
-
 -- ============================================================
 -- SECTION 1: DATABASE SETUP
 -- ============================================================
