@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Humanitarian Aid Distribution Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fa; color: #1a1a2e; padding: 2rem; }
+  .dash-wrap { max-width: 1000px; margin: 0 auto; }
+  .dash-header { margin-bottom: 2rem; border-bottom: 2px solid #1F4E79; padding-bottom: 1rem; }
+  .dash-header h1 { font-size: 22px; font-weight: 600; color: #1F4E79; margin-bottom: 4px; }
+  .dash-header p { font-size: 13px; color: #6c757d; }
+  .badge { display: inline-block; font-size: 11px; padding: 2px 10px; border-radius: 99px; background: #fff3cd; color: #856404; border: 1px solid #ffc107; margin-left: 10px; vertical-align: middle; font-weight: 500; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 2rem; }
+  .kpi { background: #fff; border-radius: 10px; padding: 16px 18px; border: 1px solid #e0e0e0; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+  .kpi-label { font-size: 10px; color: #6c757d; margin-bottom: 6px; letter-spacing: 0.08em; font-weight: 600; }
+  .kpi-value { font-size: 28px; font-weight: 700; color: #1F4E79; line-height: 1; }
+  .kpi-value.green { color: #0F6E56; }
+  .kpi-value.orange { color: #BA7517; }
+  .kpi-sub { font-size: 11px; color: #6c757d; margin-top: 4px; }
+  .section { background: #fff; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid #e0e0e0; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+  .section-title { font-size: 11px; font-weight: 700; color: #1F4E79; letter-spacing: 0.08em; margin-bottom: 1.2rem; padding-bottom: 8px; border-bottom: 1px solid #e9ecef; }
+  .chart-title { font-size: 12px; color: #6c757d; margin-bottom: 10px; font-weight: 500; }
+  .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 10px; font-size: 11px; color: #6c757d; }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  .progress-bar-bg { background: #f1f3f4; border-radius: 4px; height: 7px; margin-top: 5px; }
+  .progress-bar-fill { height: 7px; border-radius: 4px; }
+  .gap-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .gap-table th { text-align: left; padding: 8px 12px; font-size: 11px; font-weight: 700; color: #6c757d; border-bottom: 1.5px solid #dee2e6; letter-spacing: 0.04em; }
+  .gap-table td { padding: 9px 12px; border-bottom: 1px solid #f1f3f4; color: #1a1a2e; }
+  .gap-table tr:last-child td { border-bottom: none; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .pill { display: inline-block; font-size: 10px; padding: 2px 9px; border-radius: 99px; font-weight: 600; }
+  .pill-danger { background: #f8d7da; color: #842029; }
+  .pill-warning { background: #fff3cd; color: #664d03; }
+  .pill-success { background: #d1e7dd; color: #0a3622; }
+  .disclaimer { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #664d03; margin-top: 2rem; }
+  @media (max-width: 700px) { .kpi-grid { grid-template-columns: 1fr 1fr; } .chart-row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="dash-wrap">
+
+  <div class="dash-header">
+    <h1>Humanitarian Aid Distribution Analysis <span class="badge">⚠ Simulated Dataset</span></h1>
+    <p>1,000 household cases &nbsp;·&nbsp; 6 camps &nbsp;·&nbsp; 4 distribution cycles &nbsp;·&nbsp; 2024 &nbsp;·&nbsp; Portfolio demonstration project</p>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi"><p class="kpi-label">TOTAL HOUSEHOLDS</p><p class="kpi-value">1,000</p><p class="kpi-sub">registered cases</p></div>
+    <div class="kpi"><p class="kpi-label">ELIGIBLE</p><p class="kpi-value green">785</p><p class="kpi-sub">78.5% eligibility rate</p></div>
+    <div class="kpi"><p class="kpi-label">DISTRIBUTED</p><p class="kpi-value">562</p><p class="kpi-sub">71.6% of eligible</p></div>
+    <div class="kpi"><p class="kpi-label">COVERAGE GAP</p><p class="kpi-value orange">223</p><p class="kpi-sub">eligible but not served</p></div>
+  </div>
+
+  <div class="section">
+    <p class="section-title">PAGE 1 — DISTRIBUTION BY CAMP</p>
+    <div class="chart-row">
+      <div>
+        <p class="chart-title">Total eligible vs. distributed per camp</p>
+        <div class="legend">
+          <span><span class="legend-dot" style="background:#185FA5"></span>Total eligible</span>
+          <span><span class="legend-dot" style="background:#1D9E75"></span>Distributed</span>
+        </div>
+        <div style="position:relative;height:240px;"><canvas id="campBar" role="img" aria-label="Grouped bar chart of eligible vs distributed cases per camp"></canvas></div>
+      </div>
+      <div>
+        <p class="chart-title">Distribution rate per camp</p>
+        <div id="distRateBars" style="margin-top:8px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <p class="section-title">PAGE 2 — VULNERABILITY ANALYSIS</p>
+    <div class="chart-row">
+      <div>
+        <p class="chart-title">Breakdown by vulnerability category</p>
+        <div class="legend">
+          <span><span class="legend-dot" style="background:#D85A30"></span>Child-headed HH</span>
+          <span><span class="legend-dot" style="background:#185FA5"></span>Female-headed HH</span>
+          <span><span class="legend-dot" style="background:#BA7517"></span>Elderly Head</span>
+          <span><span class="legend-dot" style="background:#639922"></span>PWD Member</span>
+          <span><span class="legend-dot" style="background:#888780"></span>Standard</span>
+        </div>
+        <div style="position:relative;height:220px;"><canvas id="vulnDonut" role="img" aria-label="Donut chart of vulnerability categories"></canvas></div>
+      </div>
+      <div>
+        <p class="chart-title">Avg vulnerability score by category</p>
+        <div style="position:relative;height:240px;"><canvas id="vulnScore" role="img" aria-label="Horizontal bar chart of avg vulnerability scores"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <p class="section-title">PAGE 3 — COVERAGE GAPS</p>
+    <p class="chart-title" style="margin-bottom:14px;">Eligible but unserved — breakdown by camp</p>
+    <table class="gap-table">
+      <thead><tr><th>Camp</th><th class="num">Eligible</th><th class="num">Distributed</th><th class="num">Pending</th><th class="num">Delayed</th><th>Gap severity</th></tr></thead>
+      <tbody id="gapTableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <p class="section-title">AID TYPE DISTRIBUTION</p>
+    <div style="position:relative;height:200px;"><canvas id="aidType" role="img" aria-label="Bar chart of aid types distributed"></canvas></div>
+  </div>
+
+  <div class="disclaimer">
+    <strong>⚠ Disclaimer:</strong> All data in this dashboard is entirely <strong>simulated and synthetic</strong>. No real beneficiaries, camp locations, or organizational data are included. This project demonstrates technical skills in humanitarian data workflows (eligibility logic, distribution tracking, vulnerability analysis) as a portfolio piece. It reflects experience with UN-style data systems including UNHCR, WFP, and INGO field operations.
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const camps = ['Alpha','Beta','Gamma','Delta','Epsilon','Zeta'];
+const eligible = [203,137,138,130,101,76];
+const distributed = [149,99,97,92,73,52];
+const pending = [33,22,24,21,16,13];
+const delayed = [21,16,17,17,12,11];
+
+const baseOpts = {
+  responsive: true, maintainAspectRatio: false,
+  plugins: { legend: { display: false } },
+  scales: {
+    x: { ticks: { color: '#6c757d', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.06)' } },
+    y: { ticks: { color: '#6c757d', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.06)' } }
+  }
+};
+
+new Chart(document.getElementById('campBar'), {
+  type: 'bar',
+  data: { labels: camps, datasets: [
+    { label: 'Eligible', data: eligible, backgroundColor: '#185FA5', borderRadius: 3 },
+    { label: 'Distributed', data: distributed, backgroundColor: '#1D9E75', borderRadius: 3 }
+  ]},
+  options: baseOpts
+});
+
+const distRateContainer = document.getElementById('distRateBars');
+const rates = camps.map((c,i) => ({ camp: c, rate: Math.round(distributed[i]/eligible[i]*100) })).sort((a,b) => a.rate - b.rate);
+distRateContainer.innerHTML = rates.map(r => {
+  const color = r.rate < 65 ? '#E24B4A' : r.rate < 75 ? '#BA7517' : '#1D9E75';
+  return `<div style="margin-bottom:13px;">
+    <div style="display:flex;justify-content:space-between;font-size:13px;">
+      <span style="color:#1a1a2e;">Camp ${r.camp}</span><span style="font-weight:700;color:${color}">${r.rate}%</span>
+    </div>
+    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${r.rate}%;background:${color}"></div></div>
+  </div>`;
+}).join('');
+
+new Chart(document.getElementById('vulnDonut'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Child-headed HH','Female-headed HH','Elderly Head','PWD Member','Standard'],
+    datasets: [{ data: [94,256,164,87,399], backgroundColor: ['#D85A30','#185FA5','#BA7517','#639922','#888780'], borderWidth: 3, borderColor: '#fff' }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '60%' }
+});
+
+new Chart(document.getElementById('vulnScore'), {
+  type: 'bar',
+  data: {
+    labels: ['Child-headed HH','PWD Member','Elderly Head','Female-headed HH','Standard'],
+    datasets: [{ data: [73,70,51,44,30], backgroundColor: ['#D85A30','#639922','#BA7517','#185FA5','#888780'], borderRadius: 3 }]
+  },
+  options: { ...baseOpts, indexAxis: 'y',
+    scales: {
+      x: { min:0, max:100, ticks:{ color:'#6c757d', font:{size:11} }, grid:{color:'rgba(0,0,0,0.06)'} },
+      y: { ticks:{ color:'#6c757d', font:{size:10} }, grid:{display:false} }
+    }
+  }
+});
+
+new Chart(document.getElementById('aidType'), {
+  type: 'bar',
+  data: { labels: ['Food Basket','NFI Kit','Cash Transfer','Shelter Kit','Medical Kit'], datasets: [{ data:[316,196,157,120,116], backgroundColor:'#185FA5', borderRadius:3 }] },
+  options: baseOpts
+});
+
+const tbody = document.getElementById('gapTableBody');
+const gapData = camps.map((c,i) => ({ c, e:eligible[i], d:distributed[i], p:pending[i], dl:delayed[i] })).sort((a,b)=>(b.p+b.dl)-(a.p+a.dl));
+tbody.innerHTML = gapData.map(r => {
+  const gapPct = Math.round((r.p+r.dl)/r.e*100);
+  const pill = gapPct > 25 ? 'pill-danger' : gapPct > 18 ? 'pill-warning' : 'pill-success';
+  const label = gapPct > 25 ? 'High' : gapPct > 18 ? 'Medium' : 'Low';
+  return `<tr><td>Camp ${r.c}</td><td class="num">${r.e}</td><td class="num">${r.d}</td><td class="num">${r.p}</td><td class="num">${r.dl}</td><td><span class="pill ${pill}">${label} — ${gapPct}% gap</span></td></tr>`;
+}).join('');
+</script>
+</body>
+</html>
