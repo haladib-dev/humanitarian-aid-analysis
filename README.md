@@ -97,10 +97,11 @@ The accompanying Power BI report (`.pbix`) contains 3 pages:
 
 | Tool | Usage |
 |---|---|
-| **Python (pandas, openpyxl)** | Data simulation, Excel generation, formatting |
+| **Python (pandas, openpyxl)** | Data simulation, Excel generation,  formatting |
 | **Microsoft Excel** | Multi-sheet workbook, conditional formatting, summary tables |
 | **SQL** | Eligibility filtering, aggregation, gap analysis, beneficiary counting |
 | **Power BI** | Interactive dashboard, DAX measures, cross-filtering |
+| **Python (pandas, scikit-learn)** | ML pattern detection, anomaly flagging, clustering, risk prediction
 
 ---
 
