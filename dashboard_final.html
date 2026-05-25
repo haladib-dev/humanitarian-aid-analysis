@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Humanitarian Aid Distribution Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f4f6f9; color: #1a1a2e; }
+  .sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 200px; background: #1F4E79; padding: 1.5rem 1rem; z-index: 100; }
+  .sidebar h2 { color: #fff; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .sidebar p { color: rgba(255,255,255,0.5); font-size: 10px; margin-bottom: 1.5rem; }
+  .nav-item { display: block; padding: 8px 12px; border-radius: 6px; color: rgba(255,255,255,0.7); font-size: 12px; cursor: pointer; margin-bottom: 4px; border: none; background: none; width: 100%; text-align: left; }
+  .nav-item:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .nav-item.active { background: rgba(255,255,255,0.18); color: #fff; font-weight: 500; }
+  .nav-section { font-size: 9px; color: rgba(255,255,255,0.35); letter-spacing: 0.08em; padding: 12px 12px 4px; }
+  .main { margin-left: 200px; padding: 2rem; min-height: 100vh; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .page-header { margin-bottom: 1.5rem; }
+  .page-header h1 { font-size: 20px; font-weight: 600; color: #1F4E79; margin-bottom: 4px; }
+  .page-header p { font-size: 12px; color: #6c757d; }
+  .badge { display: inline-block; font-size: 10px; padding: 2px 9px; border-radius: 99px; margin-left: 8px; vertical-align: middle; font-weight: 500; }
+  .badge-sim { background: #fff3cd; color: #856404; }
+  .badge-ml { background: #cfe2ff; color: #084298; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 1.5rem; }
+  .kpi-grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 1.5rem; }
+  .kpi { background: #fff; border-radius: 10px; padding: 16px 18px; border: 1px solid #e8ecf0; }
+  .kpi-label { font-size: 10px; color: #6c757d; margin-bottom: 6px; letter-spacing: 0.07em; font-weight: 600; }
+  .kpi-value { font-size: 28px; font-weight: 700; color: #1F4E79; line-height: 1; }
+  .kpi-value.green { color: #0F6E56; }
+  .kpi-value.orange { color: #BA7517; }
+  .kpi-value.red { color: #A32D2D; }
+  .kpi-sub { font-size: 11px; color: #6c757d; margin-top: 4px; }
+  .card { background: #fff; border-radius: 10px; padding: 1.25rem; border: 1px solid #e8ecf0; margin-bottom: 1.2rem; }
+  .card-title { font-size: 12px; font-weight: 600; color: #1F4E79; margin-bottom: 3px; }
+  .card-sub { font-size: 11px; color: #6c757d; margin-bottom: 12px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 1.2rem; }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 10px; font-size: 11px; color: #6c757d; }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .ldot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  .progress-bar-bg { background: #f1f3f4; border-radius: 4px; height: 7px; margin-top: 5px; }
+  .progress-bar-fill { height: 7px; border-radius: 4px; }
+  .gap-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .gap-table th { text-align: left; padding: 8px 10px; font-size: 10px; font-weight: 700; color: #6c757d; border-bottom: 1.5px solid #dee2e6; letter-spacing: 0.04em; }
+  .gap-table td { padding: 8px 10px; border-bottom: 1px solid #f1f3f4; }
+  .gap-table tr:last-child td { border-bottom: none; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .pill { display: inline-block; font-size: 10px; padding: 2px 9px; border-radius: 99px; font-weight: 600; }
+  .pill-red { background: #f8d7da; color: #842029; }
+  .pill-amber { background: #fff3cd; color: #664d03; }
+  .pill-green { background: #d1e7dd; color: #0a3622; }
+  .pill-blue { background: #cfe2ff; color: #084298; }
+  .feat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+  .feat-name { font-size: 11px; color: #6c757d; width: 140px; flex-shrink: 0; }
+  .feat-bar-bg { flex: 1; height: 6px; background: #f1f3f4; border-radius: 3px; }
+  .feat-bar { height: 6px; border-radius: 3px; }
+  .feat-val { font-size: 11px; font-weight: 600; color: #1a1a2e; width: 38px; text-align: right; }
+  .cluster-card { border-left: 3px solid #ccc; border-radius: 0 8px 8px 0; padding: 10px 12px; margin-bottom: 8px; background: #f8f9fa; }
+  .cluster-title { font-size: 12px; font-weight: 600; color: #1a1a2e; margin-bottom: 5px; }
+  .cluster-stats { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: #6c757d; }
+  .cluster-stats strong { color: #1a1a2e; }
+  .anomaly-boxes { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; text-align: center; }
+  .abox { border-radius: 8px; padding: 10px 6px; }
+  .abox-val { font-size: 20px; font-weight: 700; }
+  .abox-label { font-size: 10px; margin-top: 2px; }
+  .disclaimer { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px 16px; font-size: 11px; color: #664d03; margin-top: 1.5rem; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <h2>Aid Distribution</h2>
+  <p>Simulated Dataset · 2024</p>
+  <div class="nav-section">ANALYSIS</div>
+  <button class="nav-item active" onclick="showPage('p1',this)">📊 Distribution by Camp</button>
+  <button class="nav-item" onclick="showPage('p2',this)">⚠️ Vulnerability Analysis</button>
+  <button class="nav-item" onclick="showPage('p3',this)">🔍 Coverage Gaps</button>
+  <div class="nav-section">MACHINE LEARNING</div>
+  <button class="nav-item" onclick="showPage('p4',this)">🤖 ML Pattern Detection</button>
+</div>
+
+<div class="main">
+
+  <!-- PAGE 1 -->
+  <div class="page active" id="p1">
+    <div class="page-header">
+      <h1>Distribution by Camp <span class="badge badge-sim">Simulated</span></h1>
+      <p>1,000 households · 6 camps · 4 distribution cycles</p>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi"><p class="kpi-label">TOTAL HOUSEHOLDS</p><p class="kpi-value">1,000</p><p class="kpi-sub">registered cases</p></div>
+      <div class="kpi"><p class="kpi-label">ELIGIBLE</p><p class="kpi-value green">785</p><p class="kpi-sub">78.5% eligibility rate</p></div>
+      <div class="kpi"><p class="kpi-label">DISTRIBUTED</p><p class="kpi-value">562</p><p class="kpi-sub">71.6% of eligible</p></div>
+      <div class="kpi"><p class="kpi-label">COVERAGE GAP</p><p class="kpi-value orange">223</p><p class="kpi-sub">eligible, not served</p></div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <p class="card-title">Total eligible vs. distributed per camp</p>
+        <p class="card-sub">Grouped by camp location</p>
+        <div class="legend">
+          <span><span class="ldot" style="background:#185FA5"></span>Eligible</span>
+          <span><span class="ldot" style="background:#1D9E75"></span>Distributed</span>
+        </div>
+        <div style="position:relative;height:240px;"><canvas id="campBar" role="img" aria-label="Grouped bar chart of eligible vs distributed per camp"></canvas></div>
+      </div>
+      <div class="card">
+        <p class="card-title">Distribution rate per camp</p>
+        <p class="card-sub">% of eligible cases reached</p>
+        <div id="distRateBars" style="margin-top:8px;"></div>
+      </div>
+    </div>
+    <div class="card">
+      <p class="card-title">Aid type distribution</p>
+      <p class="card-sub">Across all eligible households</p>
+      <div style="position:relative;height:180px;"><canvas id="aidType" role="img" aria-label="Bar chart of aid types"></canvas></div>
+    </div>
+  </div>
+
+  <!-- PAGE 2 -->
+  <div class="page" id="p2">
+    <div class="page-header">
+      <h1>Vulnerability Analysis</h1>
+      <p>Breakdown by household vulnerability category and score</p>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <p class="card-title">Cases by vulnerability category</p>
+        <p class="card-sub">Distribution across 5 categories</p>
+        <div class="legend">
+          <span><span class="ldot" style="background:#D85A30"></span>Child-headed</span>
+          <span><span class="ldot" style="background:#185FA5"></span>Female-headed</span>
+          <span><span class="ldot" style="background:#BA7517"></span>Elderly Head</span>
+          <span><span class="ldot" style="background:#639922"></span>PWD Member</span>
+          <span><span class="ldot" style="background:#888780"></span>Standard</span>
+        </div>
+        <div style="position:relative;height:220px;"><canvas id="vulnDonut" role="img" aria-label="Donut chart of vulnerability categories"></canvas></div>
+      </div>
+      <div class="card">
+        <p class="card-title">Avg vulnerability score by category</p>
+        <p class="card-sub">Higher score = greater need</p>
+        <div style="position:relative;height:240px;"><canvas id="vulnScore" role="img" aria-label="Horizontal bar chart of avg vulnerability scores"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 3 -->
+  <div class="page" id="p3">
+    <div class="page-header">
+      <h1>Coverage Gaps</h1>
+      <p>Eligible households not yet reached — by camp</p>
+    </div>
+    <div class="card">
+      <p class="card-title">Unserved eligible cases by camp</p>
+      <p class="card-sub">Pending distribution + delayed cases</p>
+      <table class="gap-table">
+        <thead><tr><th>Camp</th><th class="num">Eligible</th><th class="num">Distributed</th><th class="num">Pending</th><th class="num">Delayed</th><th>Gap severity</th></tr></thead>
+        <tbody id="gapTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PAGE 4 — ML -->
+  <div class="page" id="p4">
+    <div class="page-header">
+      <h1>ML Pattern Detection <span class="badge badge-ml">Machine Learning</span></h1>
+      <p>Python · scikit-learn · Isolation Forest · K-Means · Random Forest</p>
+    </div>
+    <div class="kpi-grid-3">
+      <div class="kpi"><p class="kpi-label">ANOMALIES DETECTED</p><p class="kpi-value red">70</p><p class="kpi-sub">7% of cases · Isolation Forest</p></div>
+      <div class="kpi"><p class="kpi-label">CLUSTERS IDENTIFIED</p><p class="kpi-value">4</p><p class="kpi-sub">need profiles · K-Means</p></div>
+      <div class="kpi"><p class="kpi-label">HIGH DELAY RISK</p><p class="kpi-value orange">61</p><p class="kpi-sub">eligible cases · Random Forest</p></div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <p class="card-title">Anomaly Detection — Isolation Forest</p>
+        <p class="card-sub">Unusual cases flagged per camp</p>
+        <div class="legend">
+          <span><span class="ldot" style="background:#1D9E75"></span>Normal</span>
+          <span><span class="ldot" style="background:#E24B4A"></span>Anomaly</span>
+        </div>
+        <div style="position:relative;height:200px;"><canvas id="anomalyChart" role="img" aria-label="Stacked bar chart of normal vs anomaly cases per camp"></canvas></div>
+        <div class="anomaly-boxes">
+          <div class="abox" style="background:#f8d7da;"><div class="abox-val" style="color:#842029;">21</div><div class="abox-label" style="color:#842029;">High-need unserved</div></div>
+          <div class="abox" style="background:#fff3cd;"><div class="abox-val" style="color:#664d03;">9</div><div class="abox-label" style="color:#664d03;">Eligible but delayed</div></div>
+          <div class="abox" style="background:#cfe2ff;"><div class="abox-val" style="color:#084298;">4</div><div class="abox-label" style="color:#084298;">Low score / eligible</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <p class="card-title">Beneficiary Clusters — K-Means (k=4)</p>
+        <p class="card-sub">Unsupervised segmentation by need profile</p>
+        <div class="cluster-card" style="border-left-color:#E24B4A;">
+          <p class="cluster-title">Cluster 3 — Medium-Need / Not Served</p>
+          <div class="cluster-stats"><span>Cases <strong>187</strong></span><span>Avg score <strong>44.4</strong></span><span>Distributed <strong style="color:#842029;">0%</strong></span></div>
+        </div>
+        <div class="cluster-card" style="border-left-color:#BA7517;">
+          <p class="cluster-title">Cluster 1 — High-Need / Being Served</p>
+          <div class="cluster-stats"><span>Cases <strong>251</strong></span><span>Avg score <strong>59.4</strong></span><span>Distributed <strong style="color:#0F6E56;">100%</strong></span></div>
+        </div>
+        <div class="cluster-card" style="border-left-color:#1D9E75;">
+          <p class="cluster-title">Cluster 0 — Medium-Need / Full Coverage</p>
+          <div class="cluster-stats"><span>Cases <strong>355</strong></span><span>Avg score <strong>30.2</strong></span><span>Distributed <strong style="color:#0F6E56;">100%</strong></span></div>
+        </div>
+        <div class="cluster-card" style="border-left-color:#888780;">
+          <p class="cluster-title">Cluster 2 — Low-Need / Low Eligibility</p>
+          <div class="cluster-stats"><span>Cases <strong>207</strong></span><span>Avg score <strong>29.4</strong></span><span>Eligible <strong>0%</strong></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <p class="card-title">Delay Risk — Feature Importance</p>
+        <p class="card-sub">What drives delay? Random Forest · 90% accuracy</p>
+        <div style="margin-top:8px;">
+          <div class="feat-row"><span class="feat-name">Vulnerability score</span><div class="feat-bar-bg"><div class="feat-bar" style="width:90%;background:#185FA5;"></div></div><span class="feat-val">37.6%</span></div>
+          <div class="feat-row"><span class="feat-name">Family size</span><div class="feat-bar-bg"><div class="feat-bar" style="width:45%;background:#185FA5;"></div></div><span class="feat-val">18.6%</span></div>
+          <div class="feat-row"><span class="feat-name">Camp</span><div class="feat-bar-bg"><div class="feat-bar" style="width:34%;background:#185FA5;"></div></div><span class="feat-val">14.0%</span></div>
+          <div class="feat-row"><span class="feat-name">Aid type</span><div class="feat-bar-bg"><div class="feat-bar" style="width:32%;background:#185FA5;"></div></div><span class="feat-val">13.1%</span></div>
+          <div class="feat-row"><span class="feat-name">Cycle</span><div class="feat-bar-bg"><div class="feat-bar" style="width:24%;background:#888780;"></div></div><span class="feat-val">9.9%</span></div>
+          <div class="feat-row"><span class="feat-name">Vuln. category</span><div class="feat-bar-bg"><div class="feat-bar" style="width:16%;background:#888780;"></div></div><span class="feat-val">6.8%</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <p class="card-title">Top High-Risk Cases</p>
+        <p class="card-sub">Eligible households most likely to face delays</p>
+        <table class="gap-table">
+          <thead><tr><th>Case ID</th><th>Camp</th><th>Score</th><th>Risk</th></tr></thead>
+          <tbody>
+            <tr><td>HH-1341</td><td>Beta</td><td>11.5</td><td><span class="pill pill-red">83%</span></td></tr>
+            <tr><td>HH-1571</td><td>Gamma</td><td>56.8</td><td><span class="pill pill-red">81%</span></td></tr>
+            <tr><td>HH-1039</td><td>Alpha</td><td>75.1</td><td><span class="pill pill-red">78%</span></td></tr>
+            <tr><td>HH-1170</td><td>Beta</td><td>10.1</td><td><span class="pill pill-red">76%</span></td></tr>
+            <tr><td>HH-1966</td><td>Gamma</td><td>80.2</td><td><span class="pill pill-amber">75%</span></td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:14px;">
+          <div style="font-size:11px;color:#6c757d;margin-bottom:8px;">Risk level distribution (eligible cases)</div>
+          <div style="position:relative;height:120px;"><canvas id="riskDonut" role="img" aria-label="Donut chart of risk levels among eligible cases"></canvas></div>
+          <div class="legend" style="margin-top:8px;">
+            <span><span class="ldot" style="background:#1D9E75"></span>Low (647)</span>
+            <span><span class="ldot" style="background:#BA7517"></span>Medium (77)</span>
+            <span><span class="ldot" style="background:#E24B4A"></span>High (61)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="disclaimer">
+      <strong>⚠ Disclaimer:</strong> All data is entirely simulated and synthetic. This project demonstrates technical skills in humanitarian data workflows and basic ML pattern detection (scikit-learn). Full code available on GitHub.
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+const tc = 'rgba(0,0,0,0.45)';
+const gc = 'rgba(0,0,0,0.06)';
+const base = { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:tc,font:{size:11}},grid:{color:gc}}, y:{ticks:{color:tc,font:{size:11}},grid:{color:gc}} } };
+
+const camps = ['Alpha','Beta','Gamma','Delta','Epsilon','Zeta'];
+const eligible = [203,137,138,130,101,76];
+const distributed = [149,99,97,92,73,52];
+const pending = [33,22,24,21,16,13];
+const delayed = [21,16,17,17,12,11];
+
+new Chart(document.getElementById('campBar'), { type:'bar', data:{ labels:camps, datasets:[ {label:'Eligible',data:eligible,backgroundColor:'#185FA5',borderRadius:3}, {label:'Distributed',data:distributed,backgroundColor:'#1D9E75',borderRadius:3} ] }, options:base });
+
+const distRateContainer = document.getElementById('distRateBars');
+const rates = camps.map((c,i)=>({camp:c,rate:Math.round(distributed[i]/eligible[i]*100)})).sort((a,b)=>a.rate-b.rate);
+distRateContainer.innerHTML = rates.map(r=>{
+  const color = r.rate<65?'#E24B4A':r.rate<75?'#BA7517':'#1D9E75';
+  return `<div style="margin-bottom:13px;"><div style="display:flex;justify-content:space-between;font-size:12px;"><span>Camp ${r.camp}</span><span style="font-weight:700;color:${color}">${r.rate}%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${r.rate}%;background:${color}"></div></div></div>`;
+}).join('');
+
+new Chart(document.getElementById('aidType'), { type:'bar', data:{ labels:['Food Basket','NFI Kit','Cash Transfer','Shelter Kit','Medical Kit'], datasets:[{data:[316,196,157,120,116],backgroundColor:'#185FA5',borderRadius:3}] }, options:base });
+
+new Chart(document.getElementById('vulnDonut'), { type:'doughnut', data:{ labels:['Child-headed','Female-headed','Elderly Head','PWD Member','Standard'], datasets:[{data:[94,256,164,87,399],backgroundColor:['#D85A30','#185FA5','#BA7517','#639922','#888780'],borderWidth:3,borderColor:'#fff'}] }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'60%'} });
+
+new Chart(document.getElementById('vulnScore'), { type:'bar', data:{ labels:['Child-headed','PWD Member','Elderly Head','Female-headed','Standard'], datasets:[{data:[73,70,51,44,30],backgroundColor:['#D85A30','#639922','#BA7517','#185FA5','#888780'],borderRadius:3}] }, options:{...base,indexAxis:'y',scales:{x:{min:0,max:100,ticks:{color:tc,font:{size:11}},grid:{color:gc}},y:{ticks:{color:tc,font:{size:10}},grid:{display:false}}}} });
+
+const tbody = document.getElementById('gapTableBody');
+const gapData = camps.map((c,i)=>({c,e:eligible[i],d:distributed[i],p:pending[i],dl:delayed[i]})).sort((a,b)=>(b.p+b.dl)-(a.p+a.dl));
+tbody.innerHTML = gapData.map(r=>{
+  const gapPct = Math.round((r.p+r.dl)/r.e*100);
+  const pill = gapPct>25?'pill-red':gapPct>18?'pill-amber':'pill-green';
+  const label = gapPct>25?'High':gapPct>18?'Medium':'Low';
+  return `<tr><td>Camp ${r.c}</td><td class="num">${r.e}</td><td class="num">${r.d}</td><td class="num">${r.p}</td><td class="num">${r.dl}</td><td><span class="pill ${pill}">${label} — ${gapPct}%</span></td></tr>`;
+}).join('');
+
+new Chart(document.getElementById('anomalyChart'), { type:'bar', data:{ labels:camps, datasets:[ {label:'Normal',data:[244,163,160,158,124,81],backgroundColor:'#1D9E75',borderRadius:3}, {label:'Anomaly',data:[14,11,16,7,6,16],backgroundColor:'#E24B4A',borderRadius:3} ] }, options:{...base,scales:{x:{stacked:true,ticks:{color:tc,font:{size:10}},grid:{display:false}},y:{stacked:true,ticks:{color:tc,font:{size:10}},grid:{color:gc}}}} });
+
+new Chart(document.getElementById('riskDonut'), { type:'doughnut', data:{ labels:['Low','Medium','High'], datasets:[{data:[647,77,61],backgroundColor:['#1D9E75','#BA7517','#E24B4A'],borderWidth:2,borderColor:'#fff'}] }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'58%'} });
+</script>
+</body>
+</html>
